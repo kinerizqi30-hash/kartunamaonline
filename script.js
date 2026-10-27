@@ -1,7 +1,10 @@
-var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+function getSheet() {
+  return SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+}
 
 // Fungsi saat website meminta data (Load)
 function doGet(e) {
+  var sheet = getSheet();
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var requestedId = e && e.parameter && e.parameter.id ? e.parameter.id : "1";
@@ -23,6 +26,7 @@ function doGet(e) {
 // Fungsi saat website mengirim data untuk disimpan (Save/Edit)
 function doPost(e) {
   try {
+    var sheet = getSheet();
     var data = JSON.parse(e.postData.contents);
     var rows = sheet.getDataRange().getValues();
     var targetId = data.id.toString();
