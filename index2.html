@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kartu Nama Digital - Live Edit Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.25);
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md glass rounded-3xl p-6 shadow-2xl neon-glow relative overflow-hidden">
+        <!-- Tombol Buka Mode Edit -->
+        <button onclick="toggleEdit()" class="absolute top-4 right-4 text-gray-400 hover:text-cyan-400 text-sm">
+            <i class="fa-solid fa-pen-to-square"></i> Edit
+        </button>
+
+        <!-- TAMPILAN KARTU UTAMA -->
+        <div id="view-mode" class="text-center mt-4">
+            <h1 id="view-nama" class="text-2xl font-bold text-white tracking-wide">Memuat...</h1>
+            <p id="view-jabatan" class="text-cyan-400 font-medium text-sm mt-1"></p>
+
+            <div class="mt-6 space-y-3">
+                <a id="link-wa" href="#" target="_blank"
+                    class="flex items-center justify-center gap-3 w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-lg">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <!-- FORM EDIT DATA (Tersembunyi Awalnya) -->
+        <div id="edit-mode" class="hidden mt-4 space-y-3">
+            <h2 class="text-lg font-bold text-cyan-400 mb-2">Ubah Data Kartu Nama</h2>
+            <div>
+                <label class="text-xs text-gray-400">Nama Lengkap</label>
+                <input type="text" id="input-nama"
+                    class="w-full p-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-cyan-400">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400">Jabatan</label>
+                <input type="text" id="input-jabatan"
+                    class="w-full p-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-cyan-400">
+            </div>
+            <div>
+                <label class="text-xs text-gray-400">Nomor WhatsApp (Awali 62)</label>
+                <input type="text" id="input-wa"
+                    class="w-full p-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white text-sm focus:outline-none focus:border-cyan-400">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveData()" id="btn-save"
+                    class="flex-1 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium text-sm transition">Simpan
+                    ke Database</button>
+                <button onclick="toggleEdit()"
+                    class="px-4 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx9HPFkDwOuSC3pVo8b914qpfs4drtHZsJBl7I9FCoHMIvhXQQl3r7_NQNdwQD6D5Yc/exec";
+        const currentId = "1"; // ID profil yang dibaca
+
+        async function loadData() {
+            try {
+                const res = await fetch(`${SCRIPT_URL}?id=${currentId}`);
+                const data = await res.json();
+
+                // Tampilkan ke view
+                document.getElementById('view-nama').innerText = data.nama;
+                document.getElementById('view-jabatan').innerText = data.jabatan;
+                document.getElementById('link-wa').href = `https://wa.me/${data.whatsapp}`;
+
+                // Masukkan ke input form edit
+                document.getElementById('input-nama').value = data.nama;
+                document.getElementById('input-jabatan').value = data.jabatan;
+                document.getElementById('input-wa').value = data.whatsapp;
+            } catch (e) {
+                console.log("Gagal memuat data");
+            }
+        }
+
+        function toggleEdit() {
+            const viewMode = document.getElementById('view-mode');
+            const editMode = document.getElementById('edit-mode');
+            viewMode.classList.toggle('hidden');
+            editMode.classList.toggle('hidden');
+        }
+
+        async function saveData() {
+            const btn = document.getElementById('btn-save');
+            btn.innerText = "Menyimpan...";
+
+            const payload = {
+                id: currentId,
+                nama: document.getElementById('input-nama').value,
+                jabatan: document.getElementById('input-jabatan').value,
+                whatsapp: document.getElementById('input-wa').value
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // Diperlukan untuk Google Apps Script
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("Data berhasil disimpan ke Google Sheets!");
+                toggleEdit();
+                loadData(); // Reload data terbaru
+            } catch (e) {
+                alert("Gagal menyimpan data.");
+            } finally {
+                btn.innerText = "Simpan ke Database";
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+
+</html>
